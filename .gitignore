@@ -1,0 +1,8 @@
+__pycache__/
+.env
+*.db
+static/uploads/signatures/*
+static/uploads/photos/*
+!static/uploads/signatures/.gitkeep
+!static/uploads/photos/.gitkeep
+

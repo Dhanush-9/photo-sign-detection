@@ -1,28 +1,32 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Signature Verification System</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
+
 <body>
     <div class="page">
 
         <svg class="brand-mark" viewBox="0 0 220 60" xmlns="http://www.w3.org/2000/svg">
-            <path d="M8 42 C 20 20, 30 15, 38 32 C 44 45, 50 45, 56 30 C 62 15, 70 15, 76 30 C 82 44, 90 44, 96 26 L 100 40 C 110 10, 118 10, 122 34 C 126 48, 134 40, 140 24 C 146 10, 154 14, 158 28 C 162 40, 170 40, 178 22 L 182 38 C 190 46, 200 40, 210 32"/>
+            <path
+                d="M8 42 C 20 20, 30 15, 38 32 C 44 45, 50 45, 56 30 C 62 15, 70 15, 76 30 C 82 44, 90 44, 96 26 L 100 40 C 110 10, 118 10, 122 34 C 126 48, 134 40, 140 24 C 146 10, 154 14, 158 28 C 162 40, 170 40, 178 22 L 182 38 C 190 46, 200 40, 210 32" />
         </svg>
 
         <p class="eyebrow">Document Authentication</p>
         <h1 class="title">Signature & Photo<br>Verification</h1>
-        <p class="subtitle">Register your reference signature and photo, then verify any document upload against them.</p>
+        <p class="subtitle">Register your reference signature and photo, then verify any document upload against them.
+        </p>
 
         {% with messages = get_flashed_messages() %}
-            {% if messages %}
-                {% for message in messages %}
-                    <div class="flash">{{ message }}</div>
-                {% endfor %}
-            {% endif %}
+        {% if messages %}
+        {% for message in messages %}
+        <div class="flash">{{ message }}</div>
+        {% endfor %}
+        {% endif %}
         {% endwith %}
 
         <div class="nav-grid">
@@ -42,14 +46,15 @@
                 <span class="arrow">&rarr;</span>
             </a>
 
-            <a class="nav-card disabled" href="#" onclick="return false;">
+            <a class="nav-card" href="{{ url_for('verify_photo') }}">
                 <div>
                     <div class="label">Verify Photo</div>
-                    <div class="desc">Coming in step 4</div>
+                    <div class="desc">Match a photo against registered users</div>
                 </div>
                 <span class="arrow">&rarr;</span>
             </a>
         </div>
     </div>
 </body>
+
 </html>

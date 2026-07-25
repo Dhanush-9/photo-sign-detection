@@ -59,7 +59,7 @@ def preprocess_signature(img_source):
 
 
 def compute_similarity(sign1, sign2):
-    """Compute a similarity score between two equally-sized preprocessed images """
+    """Compute a similarity score between two preprocessed images """
 
     similarity_matrix = cv2.matchTemplate(sign1, sign2, cv2.TM_CCOEFF_NORMED)
     similarity_score = float(similarity_matrix[0][0])

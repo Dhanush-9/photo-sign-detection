@@ -17,6 +17,7 @@ from werkzeug.utils import secure_filename
 
 from database.db_setup import get_connection, init_db, DB_PATH
 from matching.signature_matcher import find_best_match
+from matching.photo_matcher import find_best_photo_match
 
 #file paths
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -229,6 +230,69 @@ def verify_signature():
         query_image=get_static_path(os.path.relpath(uploaded_path, BASE_DIR)),
         matched_sign_image=get_static_path(best_user["sign_path"])
         if best_user else None,
+    )
+
+@app.route("/verify-photo", methods=["GET", "POST"])
+def verify_photo():
+
+    #show verification page
+    if request.method == "GET":
+        return render_template("verify_photo.html")
+
+    #the method is POST
+    #get uploaded photo
+    uploaded_photo = request.files.get("query_photo")
+
+    #check if file uploaded
+    if not uploaded_photo or uploaded_photo.filename == "":
+        flash("Please upload a photo to verify.")
+        return redirect(url_for("verify_photo"))
+
+    #check file format
+    if not allowed_file(uploaded_photo.filename):
+        flash("Only JPG, PNG, JPEG file format are allowed.")
+        return redirect(url_for("verify_photo"))
+
+    #save the uploaded photo temporarily
+    os.makedirs(VERIFY_TMP_DIR, exist_ok=True)
+
+
+    extension = uploaded_photo.filename.rsplit(".", 1)[-1].lower()
+    filename = f"{uuid.uuid4().hex}.{extension}"
+
+    uploaded_path = os.path.join(VERIFY_TMP_DIR, filename)
+    uploaded_photo.save(uploaded_path)
+
+    #get all users from database to compare against
+    conn = get_connection()
+    users = conn.execute("SELECT * FROM users").fetchall()
+    conn.close()
+
+    if not users:
+        flash("No users are registered yet.")
+        return redirect(url_for("verify_photo"))
+
+    try:
+        best_user, similarity_score = find_best_photo_match(
+            uploaded_path, 
+            users, 
+            BASE_DIR
+        )
+
+    except ValueError as e:
+        flash(str(e))
+        return redirect(url_for("verify_photo"))
+
+    #convert score (e.g. 0.73) to percentage (e.g. 73%)
+    score_percent = round(max(similarity_score, 0) * 100, 1)
+
+    return render_template(
+        "verify_photo_result.html",
+        matched=best_user is not None,
+        user=best_user,
+        score=score_percent,
+        query_image=get_static_path(os.path.relpath(uploaded_path, BASE_DIR)),
+        matched_photo_image=get_static_path(best_user["photo_path"]) if best_user else None,
     )
 
 if __name__ == "__main__":

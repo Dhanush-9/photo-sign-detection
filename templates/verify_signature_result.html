@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verification Result</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="page">
+
+        <svg class="brand-mark" viewBox="0 0 220 60" xmlns="http://www.w3.org/2000/svg">
+            <path d="M8 42 C 20 20, 30 15, 38 32 C 44 45, 50 45, 56 30 C 62 15, 70 15, 76 30 C 82 44, 90 44, 96 26 L 100 40 C 110 10, 118 10, 122 34 C 126 48, 134 40, 140 24 C 146 10, 154 14, 158 28 C 162 40, 170 40, 178 22 L 182 38 C 190 46, 200 40, 210 32"/>
+        </svg>
+
+        {% if matched %}
+            <div class="badge match">&#10003; Signature Matched</div>
+        {% else %}
+            <div class="badge no-match">&#10005; No Match Found</div>
+        {% endif %}
+
+        <h1 class="title">{{ "It's a match" if matched else "No registered signature matched" }}</h1>
+        <p class="subtitle">
+            {% if matched %}
+                Closest registered signature scored {{ score }}% similarity.
+            {% else %}
+                The closest registered signature only scored {{ score }}% similarity, below our match threshold.
+            {% endif %}
+        </p>
+
+        <div class="card">
+            <div class="compare-grid">
+                <div class="compare-item">
+                    <img src="{{ url_for('static', filename=query_image) }}" alt="Uploaded signature">
+                    <div class="caption">Uploaded</div>
+                </div>
+                <div class="compare-item">
+                    {% if matched %}
+                        <img src="{{ url_for('static', filename=matched_sign_image) }}" alt="Registered signature">
+                        <div class="caption">Registered</div>
+                    {% else %}
+                        <img src="" alt="" style="visibility:hidden;">
+                        <div class="caption">No match above threshold</div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="score-row">
+                <div class="score-label">
+                    <span>Similarity score</span>
+                    <span>{{ score }}%</span>
+                </div>
+                <div class="score-track">
+                    <div class="score-fill" style="width: {{ score }}%;"></div>
+                </div>
+            </div>
+
+            {% if matched %}
+            <div class="user-info">
+                <div class="row"><span class="k">Name</span><span class="v">{{ user['name'] }}</span></div>
+                <div class="row"><span class="k">Email</span><span class="v">{{ user['email'] }}</span></div>
+                <div class="row"><span class="k">Contact</span><span class="v">{{ user['contact'] or '—' }}</span></div>
+                <div class="row"><span class="k">Location</span><span class="v">{{ user['location'] or '—' }}</span></div>
+            </div>
+            {% endif %}
+        </div>
+
+        <a class="back-link" href="{{ url_for('verify_signature') }}">&larr; Try another signature</a>
+    </div>
+</body>
+</html>

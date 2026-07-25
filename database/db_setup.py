@@ -38,8 +38,8 @@ def init_db():
             email TEXT UNIQUE NOT NULL ,
             contact TEXT,
             location TEXT,
-            signature_path TEXT NOT NULL,
-            photo_path TEXT NOT NULL,
+            sign_path TEXT NOT NULL,
+            photo_path TEXT NOT NULL
         )
         """
     )

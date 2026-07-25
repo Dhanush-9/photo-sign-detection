@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register — Signature Verification</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="page">
+
+        <svg class="brand-mark" viewBox="0 0 220 60" xmlns="http://www.w3.org/2000/svg">
+            <path d="M8 42 C 20 20, 30 15, 38 32 C 44 45, 50 45, 56 30 C 62 15, 70 15, 76 30 C 82 44, 90 44, 96 26 L 100 40 C 110 10, 118 10, 122 34 C 126 48, 134 40, 140 24 C 146 10, 154 14, 158 28 C 162 40, 170 40, 178 22 L 182 38 C 190 46, 200 40, 210 32"/>
+        </svg>
+
+        <p class="eyebrow">Step 1 of 2 — Identity</p>
+        <h1 class="title">Register your details</h1>
+        <p class="subtitle">We'll use your signature and photo as the reference we match future uploads against.</p>
+
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="flash error">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <form class="card" method="POST" enctype="multipart/form-data">
+            <div class="field">
+                <label for="name">Name</label>
+                <input type="text" id="name" name="name" placeholder="eg. John Doe" required>
+            </div>
+
+            <div class="field">
+                <label for="email">Email</label>
+                <input type="email" id="email" name="email" placeholder="eg. johndoe@gmail.com" required>
+            </div>
+
+            <div class="field row-2">
+                <div>
+                    <label for="contact">Contact</label>
+                    <input type="text" id="contact" name="contact" placeholder="eg. 98765 43210">
+                </div>
+                <div>
+                    <label for="location">Location</label>
+                    <input type="text" id="location" name="location" placeholder="eg. India">
+                </div>
+            </div>
+
+            <div class="field row-2">
+                <div class="upload-box" id="sign-box">
+                    <input type="file" id="signature" name="signature" accept=".png,.jpg,.jpeg" required>
+                    <span class="upload-icon">&#9998;</span>
+                    <div class="upload-label">Signature</div>
+                    <span class="upload-filename" id="sign-filename"></span>
+                </div>
+                <div class="upload-box" id="photo-box">
+                    <input type="file" id="photo" name="photo" accept=".png,.jpg,.jpeg" required>
+                    <span class="upload-icon">&#9737;</span>
+                    <div class="upload-label">Photo</div>
+                    <span class="upload-filename" id="photo-filename"></span>
+                </div>
+            </div>
+            <p class="hint">PNG · JPG · JPEG</p>
+
+            <br>
+            <button type="submit" class="btn">Submit</button>
+        </form>
+
+        <a class="back-link" href="{{ url_for('home') }}">&larr; Back to home</a>
+    </div>
+
+    <script>
+        function wireUpload(inputId, boxId, nameId) {
+            const input = document.getElementById(inputId);
+            const box = document.getElementById(boxId);
+            const nameEl = document.getElementById(nameId);
+            input.addEventListener('change', () => {
+                if (input.files.length > 0) {
+                    box.classList.add('has-file');
+                    nameEl.textContent = input.files[0].name;
+                } else {
+                    box.classList.remove('has-file');
+                    nameEl.textContent = '';
+                }
+            });
+        }
+        wireUpload('signature', 'sign-box', 'sign-filename');
+        wireUpload('photo', 'photo-box', 'photo-filename');
+    </script>
+</body>
+</html>

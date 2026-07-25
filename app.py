@@ -10,16 +10,31 @@ and user information in SQLite
 
 import os
 import sqlite3
+import uuid
 from dotenv import load_dotenv
 from flask import Flask, render_template, request, redirect, url_for, flash
 from werkzeug.utils import secure_filename
 
 from database.db_setup import get_connection, init_db, DB_PATH
+from matching.signature_matcher import find_best_match
 
 #file paths
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-SIGNATURE_UPLOAD_DIR = os.path.join(BASE_DIR, "static", "uploads", "signatures")
-PHOTO_UPLOAD_DIR = os.path.join(BASE_DIR, "static", "uploads", "photos")
+SIGNATURE_UPLOAD_DIR = os.path.join(BASE_DIR, "static", "uploads", "sign")
+PHOTO_UPLOAD_DIR = os.path.join(BASE_DIR, "static", "uploads", "photo")
+VERIFY_TMP_DIR = os.path.join(BASE_DIR, "static", "uploads", "verify_temp")
+
+def get_static_path(file_path):
+    """
+    Convert a file path into a path that Flask's url_for('static')
+    can use.
+    """
+    file_path = file_path.replace("\\", "/")
+
+    if file_path.startswith("static/"):
+        file_path = file_path[7:]
+
+    return file_path
 
 #supported extensions
 ALLOWED_EXTS = {"png", "jpg", "jpeg"}
@@ -146,11 +161,75 @@ def register():
         conn.commit()
 
     except sqlite3.Error:
-        flash("Error occured, Email is already registered.")
+        flash("Error occurred, Email is already registered.")
         return redirect(url_for("register"))
     
     flash(f"Registered {userData["name"]} successfully!")
     return redirect(url_for("home"))
+
+@app.route("/verify-signature", methods=["GET", "POST"])
+def verify_signature():
+
+    #show verification page
+    if request.method == "GET":
+        return render_template("verify_signature.html")
+
+    #the method is POST
+    #get uploaded signature
+    uploaded_sign = request.files.get("query_signature")
+
+    #check if file uploaded
+    if not uploaded_sign or uploaded_sign.filename == "":
+        flash("Please upload a signature to verify.")
+        return redirect(url_for("verify_signature"))
+
+    #check file format
+    if not allowed_file(uploaded_sign.filename):
+        flash("Only JPG, PNG, JPEG file format are allowed.")
+        return redirect(url_for("verify_signature"))
+
+    #save the uploaded sign temporarily
+    os.makedirs(VERIFY_TMP_DIR, exist_ok=True)
+
+
+    extension = uploaded_sign.filename.rsplit(".", 1)[-1].lower()
+    filename = f"{uuid.uuid4().hex}.{extension}"
+
+    uploaded_path = os.path.join(VERIFY_TMP_DIR, filename)
+    uploaded_sign.save(uploaded_path)
+
+    #get all users from database to compare against
+    conn = get_connection()
+    users = conn.execute("SELECT * FROM users").fetchall()
+    conn.close()
+
+    if not users:
+        flash("No users are registered yet.")
+        return redirect(url_for("verify_signature"))
+
+    try:
+        best_user, similarity_score = find_best_match(
+            uploaded_path,
+            users,
+            BASE_DIR
+        )
+
+    except ValueError as e:
+        flash(str(e))
+        return redirect(url_for("verify_signature"))
+
+    #convert score (e.g. 0.73) to percentage (e.g. 73%)
+    score_percent = round(max(similarity_score, 0) * 100, 1)
+
+    return render_template(
+        "verify_signature_result.html",
+        matched=best_user is not None,
+        user=best_user,
+        score=score_percent,
+        query_image=get_static_path(os.path.relpath(uploaded_path, BASE_DIR)),
+        matched_sign_image=get_static_path(best_user["sign_path"])
+        if best_user else None,
+    )
 
 if __name__ == "__main__":
     if not os.path.exists(DB_PATH):

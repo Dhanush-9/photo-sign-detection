@@ -9,15 +9,18 @@ and user information in SQLite
 
 
 import os
+import cv2
 import sqlite3
 import uuid
 from dotenv import load_dotenv
 from flask import Flask, render_template, request, redirect, url_for, flash
 from werkzeug.utils import secure_filename
+from detection.signature_detector import detect_signature_region
 
 from database.db_setup import get_connection, init_db, DB_PATH
 from matching.signature_matcher import find_best_match
 from matching.photo_matcher import find_best_photo_match
+
 
 #file paths
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -199,6 +202,16 @@ def verify_signature():
     uploaded_path = os.path.join(VERIFY_TMP_DIR, filename)
     uploaded_sign.save(uploaded_path)
 
+    #detect just the signature region, if nothing detected, use whole image instead
+    match_path = uploaded_path
+    cropped_sign = detect_signature_region(uploaded_path)
+
+    if cropped_sign is not None:
+        cropped_filename = f"{uuid.uuid4().hex}_cropped.png"
+        cropped_path = os.path.join(VERIFY_TMP_DIR, cropped_filename)
+        cv2.imwrite(cropped_path, cropped_sign)
+        match_path = cropped_path
+
     #get all users from database to compare against
     conn = get_connection()
     users = conn.execute("SELECT * FROM users").fetchall()
@@ -210,7 +223,7 @@ def verify_signature():
 
     try:
         best_user, similarity_score = find_best_match(
-            uploaded_path,
+            match_path,
             users,
             BASE_DIR
         )
@@ -227,7 +240,7 @@ def verify_signature():
         matched=best_user is not None,
         user=best_user,
         score=score_percent,
-        query_image=get_static_path(os.path.relpath(uploaded_path, BASE_DIR)),
+        query_image=get_static_path(os.path.relpath(match_path, BASE_DIR)),
         matched_sign_image=get_static_path(best_user["sign_path"])
         if best_user else None,
     )
@@ -299,5 +312,5 @@ if __name__ == "__main__":
     if not os.path.exists(DB_PATH):
         init_db()
 
-    app.run(debug=True)
+    app.run(debug=True, use_reloader=False)
 

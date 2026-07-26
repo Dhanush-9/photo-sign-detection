@@ -1,4 +1,4 @@
-# Automatic Signature and Photo Detection using AI & OCR
+# Automatic Signature and Photo Detection using AI
 
 A lightweight Flask web application that handles user registration, custom file uploads (signatures and profile photos). The app stores data securely in a local SQLite database and verifies uploaded signatures and photos using OpenCV-based image matching.
 
@@ -10,9 +10,8 @@ A lightweight Flask web application that handles user registration, custom file 
 - SQLite database for storing user information.
 - Signature verification using OpenCV template matching.
 - Photo verification using Haar Cascade face detection and OpenCV template matching.
-- Signature detection from full documents using a fine-tuned YOLOv5 model.
-- Automatic cropping of detected signatures before verification.
-- Secure file upload validation and collision-free file storage.
+- Signature detection from full documents using a YOLOv5 model.
+- Secure file upload validation.
 
 ---
 
@@ -70,7 +69,7 @@ FLASK_KEY=your_secret_key_here
 Before running the application, create the SQLite database.
 
 ```bash
-python db_setup.py
+python database/db_setup.py
 ```
 
 This creates the required database and tables.
